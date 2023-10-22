@@ -7,6 +7,7 @@ import {
   openContractCall,
 } from "@stacks/connect";
 import { StacksMocknet } from "@stacks/network";
+import logo from "../assets/logo.png";
 import { stringUtf8CV } from "@stacks/transactions";
 
 const Navbar = () => {
@@ -44,26 +45,36 @@ const Navbar = () => {
   const logUserOut = async () => {
     userSession.signUserOut();
     window.location.reload();
-  }
+  };
 
   return (
-    <div className="bg-indigo-500 py-2 text-slate-100 flex items-center justify-between px-20">
-      <h1 className="text-2xl font-black">StackSpace</h1>
+    <div className=" py-2 flex items-center shadow-2xl justify-between px-20">
+      <Link to={"/"} className="flex items-center">
+        <img src={logo} />
+        <h1 className="text-2xl font-logoFont font-black">StackSpace</h1>
+      </Link>
       <ul className="flex gap-6 items-center">
         <li>
-          <Link to={"/"}>Home</Link>
+          <Link className="font-logoFont tracking-wider text-lg" to={"/"}>
+            Home
+          </Link>
         </li>
         <li>
-          <Link to={"/marketplace"}>Marketplace</Link>
+          <Link className="font-logoFont tracking-wider text-lg" to={"/sellers"}>
+            Sell
+          </Link>
         </li>
         <li>
-          <Link to={"/sellers"}>Sell</Link>
+          <Link className="font-logoFont tracking-wider text-lg" to={"/marketplace"}>
+            Marketplace
+          </Link>
         </li>
+
         {!address && (
           <li>
             <button
               onClick={handleLogin}
-              className="bg-slate-200 hover:bg-white duration-300 ease-in-out rounded-md px-3 py-2 text-indigo-800"
+              className=" font-logoFont text-lg bg-gradient-to-t from-green-600 to-green-500 hover:scale-105 hover:from-indigo-600 hover:to-indigo-500 duration-300 ease-in-out rounded-md px-3 py-2 text-white"
             >
               Connect Wallet
             </button>
@@ -77,7 +88,9 @@ const Navbar = () => {
             <button type="button" onClick={handleLogin}>
               Change Account
             </button>
-            <button onClick={logUserOut} type="button">Log Out</button>
+            <button onClick={logUserOut} type="button">
+              Log Out
+            </button>
           </div>
         )}
       </ul>

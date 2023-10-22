@@ -11,9 +11,11 @@ import { stringUtf8CV } from "@stacks/transactions";
 import React from "react";
 import homeImage from "../assets/home.png";
 import SellerInstruction from "../components/SellerInstruction";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLocationArrow } from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 
 const Home = () => {
-
   // const retrieveMessage = async () => {
   //   const retrievedMessage = await fetch(
   //     "http://localhost:3999/extended/v1/tx/events?" +
@@ -26,10 +28,10 @@ const Home = () => {
   // };
 
   return (
-    <main className="min-h-screen bg-indigo-600 px-20">
+    <main className="min-h-screen bg-slate-100 px-20">
       {/* Left side */}
       <div className="flex h-screen">
-        <div className="w-1/2 flex flex-col text-slate-200 gap-10 justify-center">
+        <div className="w-1/2 flex flex-col text-slate-800 gap-10 justify-center">
           <h3 className="text-3xl text-homeFont uppercase font-black">
             Welcome to the future
           </h3>
@@ -41,12 +43,12 @@ const Home = () => {
           </h3>
           {/* Controls */}
           <div className="flex gap-4">
-            <button className="text-slate-200 text-2xl hover:bg-indigo-700 duration-300 ease-in-out rounded-md px-5 py-3 bg-indigo-800">
-              Sell Now
-            </button>
-            <button className="text-slate-200 text-2xl hover:bg-indigo-700 duration-300 ease-in-out rounded-md px-5 py-3 bg-indigo-800">
-              Invest
-            </button>
+            <Link to={'/marketplace'}>
+              <button className="text-white font-logoFont gap-2 tracking-wider flex items-center text-2xl transform hover:translate-x-1 hover:-translate-y-1 duration-300 ease-in-out rounded-md px-5 py-3 bg-gradient-to-t from-green-600 to-green-500 hover:from-indigo-600 hover:to-indigo-500">
+                Visit Marketplace
+                <FontAwesomeIcon icon={faLocationArrow} className="text-xl" />
+              </button>
+            </Link>
           </div>
         </div>
         {/* Right side */}

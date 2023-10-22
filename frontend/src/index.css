@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter&family=Space+Grotesk&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Kanit&family=Playpen+Sans&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,3 +23,6 @@ body {
   margin: 0;
 
 }
+
+
+

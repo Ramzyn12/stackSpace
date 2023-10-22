@@ -2,23 +2,25 @@ import React from "react";
 import magnify from "../assets/magnifying.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationArrow } from "@fortawesome/free-solid-svg-icons";
-
+import wallet from "../assets/wallet.png";
+import form from "../assets/form.png";
+import { Link } from "react-router-dom";
 const SellerInstruction = () => {
   return (
     <>
       {" "}
-      <h1 className="text-center text-slate-200 text-6xl pt-10 font-black uppercase font-homeFont">
+      <h1 className="text-center text-slate-800 text-6xl pt-10 font-black uppercase font-homeFont">
         List your property shares
       </h1>
-      <h3 className="text-center text-slate-200 text-4xl pt-10 font-black uppercase font-homeFont">
+      <h3 className="text-center text-slate-800 text-4xl pt-10 font-black uppercase font-homeFont">
         In 3 easy steps
       </h3>
       {/* Instructions */}
       <div className="p-16 flex justify-around">
         {/* Card One */}
-        <div className="bg-slate-200 shadow-slate-800 shadow-xl w-[350px] flex flex-col gap-3 items-center justify-center p-8 rounded-xl">
+        <div className="bg-white shadow-slate-500 shadow-lg w-[350px] flex flex-col gap-6 items-center justify-center p-8 rounded-xl">
           {/* E.g magnifying glass */}
-          <img className="w-3/5 object-contain" src={magnify} />
+          <img className="w-2/5 rounded-xl object-contain" src={wallet} />
           {/* title e.g Find Address */}
           <h1 className="font-black text-3xl">Connect Wallet</h1>
           {/* Explanation */}
@@ -29,9 +31,9 @@ const SellerInstruction = () => {
             labore sequi odit?
           </p>
         </div>
-        <div className="bg-slate-200 shadow-slate-800 shadow-xl w-[350px] flex flex-col gap-3 items-center justify-center p-8 rounded-xl">
+        <div className="bg-white shadow-slate-500 shadow-lg w-[350px] flex flex-col gap-6 items-center justify-center p-8 rounded-xl">
           {/* E.g magnifying glass */}
-          <img className="w-3/5 object-contain" src={magnify} />
+          <img className="w-2/5 object-contain" src={magnify} />
           {/* title e.g Find Address */}
           <h1 className="font-black text-3xl">Find Address</h1>
           {/* Explanation */}
@@ -42,9 +44,9 @@ const SellerInstruction = () => {
             labore sequi odit?
           </p>
         </div>
-        <div className="bg-slate-200 shadow-slate-800 shadow-xl w-[350px] flex flex-col gap-3 items-center justify-center p-8 rounded-xl">
+        <div className="bg-white shadow-slate-500 shadow-lg w-[350px] flex flex-col gap-6 items-center justify-center p-8 rounded-xl">
           {/* E.g magnifying glass */}
-          <img className="w-3/5 object-contain" src={magnify} />
+          <img className="w-2/5 ml-6 object-right object-contain" src={form} />
           {/* title e.g Find Address */}
           <h1 className="font-black text-3xl">Complete form</h1>
           {/* Explanation */}
@@ -57,11 +59,13 @@ const SellerInstruction = () => {
         </div>
       </div>
       {/* CTA */}
-      <div className="flex w-full mt-10 pb-20 justify-center">
-        <button className="text-indigo-800 flex gap-2 items-center text-2xl hover:bg-indigo-700 duration-300 ease-in-out rounded-md px-8 py-3 bg-white">
-          Let's Get To Selling
-          <FontAwesomeIcon icon={faLocationArrow}/>
-        </button>
+      <div className="flex w-full mt-3 pb-20 justify-center">
+        <Link to={'/sellers'}>
+          <button className="text-white font-logoFont gap-2 tracking-wider flex items-center text-2xl transform hover:translate-x-1 hover:-translate-y-1 duration-300 ease-in-out rounded-md px-5 py-3 bg-gradient-to-t from-green-600 to-green-500 hover:from-indigo-600 hover:to-indigo-500">
+            Make Your First Sale
+            <FontAwesomeIcon icon={faLocationArrow} className="text-xl" />
+          </button>
+        </Link>
       </div>
     </>
   );

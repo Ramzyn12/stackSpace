@@ -27,6 +27,7 @@ const Sell = () => {
   const [findPostCode, setFindPostCode] = useState("");
   const [userData, setUserData] = useState(undefined);
   const [image, setImage] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
   const address = userData?.profile?.stxAddress?.testnet;
 
   const appConfig = new AppConfig(["store_write"]);
@@ -41,10 +42,17 @@ const Sell = () => {
     const file = e.target.files[0];
     if (!file) {
       console.log("No file chosen");
+      setImagePreview(null);
     } else if (!file.type.startsWith("image/")) {
       console.log("Not an image file");
+      setImagePreview(null);
     } else {
-      setImage(file); // Update your state with the chosen file
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(file);
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -66,7 +74,6 @@ const Sell = () => {
     const houseId = 125; // a random house-id for demonstration
     const pricePerShareInMicroSTX = pricePerShare; // you need to make sure this is in the smallest denomination, which is usually measured in micro-units of the currency
     const pricePerShareInSTX = pricePerShareInMicroSTX * 1000000; // you need to make sure this is in the smallest denomination, which is usually measured in micro-units of the currency
-
     const totalSharesForSale = totalShares;
 
     const functionArgs = [
@@ -85,7 +92,6 @@ const Sell = () => {
       onFinish: (data) => {
         console.log("Transaction ID:", data.txId);
         console.log("Transaction:", data);
-        // Here, you might want to show a confirmation to the user, reset form fields, etc.
       },
     };
 
@@ -96,24 +102,20 @@ const Sell = () => {
     await uploadBytes(imageRef, image);
     // Get the download URL for the uploaded image
     const url = await getDownloadURL(imageRef);
-    console.log(url)
+    console.log(url);
 
     try {
       const docRef = await addDoc(collection(db, "houseListings"), {
         houseId: houseId, // this could be a more unique identifier
         image_url: url,
-        last_sale_price: "200000",
+        last_sale_price: (pricePerShare * 100) / 1.8,
         num_bedrooms: 3,
         num_bathrooms: 3,
         num_floors: 2,
-        title: "fake house for testing",
+        title: `${3} bed semi-detached house for sale`,
         last_published_date: "2023-10-20 12:54:04",
-        address: {
-          line2: "...",
-          city: "London",
-          postCode: postCode,
-        },
-        displayable_address: "latest ",
+
+        displayable_address: `${streetName}, ${city}, ${postCode.slice(0, 3)}`,
         shares: totalSharesForSale,
         pricePerShare: pricePerShareInSTX,
       });
@@ -129,9 +131,7 @@ const Sell = () => {
     setPostCode("");
   };
 
-  const handleFindAddress = async (e) => {
-    e.preventDefault();
-
+  const handleFindAddress = async () => {
     const url = `https://uk-postcode.p.rapidapi.com/search?q=${findPostCode
       .trim()
       .slice(0, 3)}%20${findPostCode.trim().slice(3, 6)}&limit=10`;
@@ -143,40 +143,47 @@ const Sell = () => {
       setCity(finalInfo.locality);
       setStreetName(finalInfo.streetName);
       setPostCode(findPostCode.toUpperCase());
+      setFindPostCode("");
     } catch (error) {
       console.error(error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-indigo-600 pb-32">
+    <div className="min-h-screen bg-gray-100 pb-32">
       {/* search bar */}
-      <form onSubmit={handleFindAddress} className="w-full flex bg-blue-300">
-        <input
-          type="text"
-          placeholder="Enter Postcode"
-          onChange={(e) => setFindPostCode(e.target.value)}
-          value={findPostCode}
-          className=" flex-1 border p-2 border-gray-300"
-        />
-        <button className="py-3 px-6 bg-slate-200 text-red rounded">
-          Find Address
-        </button>
-      </form>
+
       {/* main info for selling shares */}
       <form onSubmit={handleHouseListing} className="px-32 flex flex-col">
         {/* description */}
         <div>
-          <h1 className="font-bold text-4xl text-slate-200 mt-10">
+          <h1 className="font-bold text-4xl text-gray-800 mt-10">
             Tokenise and Sell a fraction of your house
           </h1>
-          <h3 className="text-xl text-slate-200 py-4 max-w-xl">
+          <h3 className="text-xl text-gray-800 py-4 max-w-xl">
             Remember the more information you give about your property the more
             likely it is people find it.
           </h3>
         </div>
 
-        <div className="bg-slate-200 mt-10 p-8 rounded-md flex gap-5 flex-col">
+        <div className="w-full flex mt-3">
+          <input
+            type="text"
+            placeholder="Enter Postcode"
+            onChange={(e) => setFindPostCode(e.target.value)}
+            value={findPostCode}
+            className=" flex-1 border p-2 border-gray-300"
+          />
+          <button
+            type="button"
+            onClick={handleFindAddress}
+            className="py-3 px-6 bg-gray-200 text-red rounded"
+          >
+            Find Address
+          </button>
+        </div>
+
+        <div className="bg-gray-200 mt-10 p-8 rounded-md flex gap-5 flex-col">
           <p>Manually Add Address</p>
           {/* jagged box */}
           <div className="w-full gap-8 items-center justify-between flex">
@@ -218,29 +225,20 @@ const Sell = () => {
             />
           </div>
         </div>
-        {false && (
-          <div className="flex mt-10 items-center justify-between">
-            <div>
-              <h1 className="text-3xl py-2 text-slate-200 font-black">
-                Current Evaluation
-              </h1>
-              <h1 className="text-4xl">
-                <span className="text-green-300">334038493874 STX</span> /{" "}
-                <span className="text-red-200">$45084754</span>
-              </h1>
-            </div>
 
-            <button className="px-5 py-3  rounded bg-green-300 text-black">
-              Ready to Tokenise?
-            </button>
-          </div>
-        )}
         {/* upload photos */}
         {true && (
-          <div className="bg-slate-200 mt-10 p-8 rounded-md flex gap-5 flex-col">
+          <div className="bg-gray-200  mt-10 p-8 rounded-md flex gap-5 flex-col">
             <p>Add up to 10 photos</p>
             {/* jagged box */}
-            <div className="w-full py-20 flex items-center justify-center border-black border-4 border-dotted">
+            <div className="w-full py-20 relative flex items-center justify-center border-black border-4 border-dotted">
+              {imagePreview && (
+                <img
+                  src={imagePreview}
+                  alt="Thumbnail"
+                  className=" w-32 absolute left-0 top-0 h-32 object-cover"
+                />
+              )}
               <input
                 type="file"
                 id="imageInput"
@@ -248,6 +246,7 @@ const Sell = () => {
                 style={{ display: "none" }} // This hides the default file input
                 accept="image/*" // Optional: this attribute limits the file picker dialog to only show image files
               />
+
               <label htmlFor="imageInput" className="cursor-pointer">
                 {/* The label acts as your "button". When the user clicks this label, it will open the file picker dialog. */}
                 <div className="p-5 border border-black rounded-sm gap-2 flex items-center">
@@ -256,11 +255,10 @@ const Sell = () => {
                 </div>
               </label>
               {/* You could display the chosen image name here or a thumbnail of the image */}
-              {image && <p>Chosen file: {image.name}</p>}
             </div>
           </div>
         )}
-        <div className="bg-slate-200 mt-10 p-8 rounded-md flex gap-5 flex-col">
+        <div className="bg-gray-200 mt-10 p-8 rounded-md flex gap-5 flex-col">
           <p>How many shares are you selling?</p>
           {/* jagged box */}
           <div className="w-full gap-8 items-center justify-between flex">
@@ -269,7 +267,6 @@ const Sell = () => {
               type="text"
               value={totalShares}
               onChange={(e) => setTotalShares(e.target.value)}
-              required
               placeholder="20"
               className=" flex-1 border p-2 border-gray-300"
             />
@@ -280,17 +277,23 @@ const Sell = () => {
               type="text"
               value={pricePerShare}
               onChange={(e) => setPricePerShare(e.target.value)}
-              required
               placeholder="300 STX"
               className=" flex-1 border p-2 border-gray-300"
             />
           </div>
         </div>
         {/* controls */}
-        <div className="flex w-full justify-end">
+        <div
+          className={`flex w-full mt-10 ${
+            totalShares && pricePerShare ? "justify-between" : "justify-end"
+          } items-center`}
+        >
+          {totalShares && pricePerShare && (
+            <p className="text-2xl font-black">{`You want to sell ${totalShares} shares for ${pricePerShare} STX each`}</p>
+          )}
           <button
             type="submit"
-            className="py-3 px-6 bg-green-500 mt-10 text-red rounded"
+            className=" font-logoFont text-lg bg-gradient-to-t from-green-600 to-green-500 hover:scale-105 hover:from-indigo-600 hover:to-indigo-500 duration-300 ease-in-out rounded-md px-3 py-2 text-white"
           >
             Sell your shares
           </button>

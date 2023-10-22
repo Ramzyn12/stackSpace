@@ -6,8 +6,13 @@ module.exports = {
     extend: {
       fontFamily: {
         'homeFont': ['Space Grotesk', 'sans'],
-        'regularText': ['Inter', 'sans']
+        'regularText': ['Inter', 'sans'],
+        'playFont': ['Playpen Sans', 'cursive'],
+        'logoFont': ['Kanit', 'sans-serif'],
+
+
       }
+
     },
   },
   plugins: [],

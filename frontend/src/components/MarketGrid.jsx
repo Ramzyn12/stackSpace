@@ -1,16 +1,23 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 // import fakeHouse from "../assets/housePic.jpeg";
 import React, { useState, useEffect, useRef } from "react";
-import { faBathtub, faBed, faStairs } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBathtub,
+  faBed,
+  faCoins,
+  faLayerGroup,
+  faStairs,
+} from "@fortawesome/free-solid-svg-icons";
 // import allData from "../data/data.json";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 import { StacksMocknet } from "@stacks/network";
 import { uintCV, PostConditionMode } from "@stacks/transactions";
 import { openContractCall } from "@stacks/connect";
+import MarketGridSkeleton from "./MarketGridSkeleton";
 const BASE_URL = "https://zoopla.p.rapidapi.com/properties/list";
 const defaultParams = {
-  area: "Oxford",
+  area: "London",
   order_by: "age",
   ordering: "descending",
   listing_status: "sale",
@@ -25,26 +32,20 @@ const options = {
   },
 };
 
-function getDaysAgo(dateString) {
-  // Parse the date string
-  const datePosted = new Date(dateString);
-
-  // Get the current date
-  const currentDate = new Date();
-
-  // Calculate the difference in milliseconds
-  const msDifference = currentDate - datePosted;
-
-  // Convert the difference to days
-  const daysDifference = Math.floor(msDifference / (1000 * 60 * 60 * 24));
-
-  return daysDifference;
-}
-
 const MarketGrid = ({ formData }) => {
   const [pageData, setPageData] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [sharesInput, setSharesInput] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedHouseTour, setSelectedHouseTour] = useState({});
+
+  const toggleVirtualTour = (index) => {
+    setSelectedHouseTour((prevState) => {
+      const newState = { ...prevState };
+      newState[index] = !newState[index];
+      return newState;
+    });
+  };
 
   const isFirstRender = useRef(true); // Create a ref to keep track of the first render
   const appDetails = {
@@ -64,6 +65,7 @@ const MarketGrid = ({ formData }) => {
 
   // Function to fetch a page of house data
   const fetchData = async (formData) => {
+    setIsLoading(true);
     if (!formData) return;
     try {
       const params = { ...defaultParams, ...formData }; // Overwrite the default page_number with the current page
@@ -73,10 +75,11 @@ const MarketGrid = ({ formData }) => {
       const response = await fetch(fullUrl, options); // Use the fullUrl and options
       const allData = await response.json();
       const houses = allData.listing; // Assume pages are 0-indexed in the data
+      const filteredHouses = houses.filter((house) => house?.virtual_tour);
       const firestoreData = await fetchFirestoreData();
-      const combinedData = houses.concat(firestoreData);
-      // console.log(combinedData);
+      const combinedData = filteredHouses.concat(firestoreData);
       setPageData(combinedData);
+      setIsLoading(false);
 
       // Initialize shares input state
       const initialSharesState = combinedData.map(() => ({ shares: 0 }));
@@ -128,79 +131,120 @@ const MarketGrid = ({ formData }) => {
   };
 
   useEffect(() => {
+    // If it's the first render, we don't want to fetch data just yet.
     if (isFirstRender.current) {
-      isFirstRender.current = false; // Update the ref to indicate that the first render is complete
-    } else {
-      fetchData(formData); // Fetch new data when formData changes, but not on the first render
+      isFirstRender.current = false; // mark that the first render is complete
+      return; // by returning early here, we don't proceed to fetchData
     }
-  }, [formData]);
+
+    // For subsequent renders, if formData is defined, we fetch data
+    if (formData) {
+      fetchData(formData); // Fetch new data when formData changes
+    }
+  }, [formData]); // dependency array
 
   return (
-    <div className="grid grid-cols-3 gap-10 ">
-      {pageData.map((house, index) => (
-        <div key={index} className="flex flex-col w-[380px] shadow-xl rounded">
-          {/* image container */}
-          <div className="w-full h-[200]px">
-            <img src={house.image_url} className="w-full object-cover" />
-          </div>
-          {/* info */}
-          <div className="text-slate-200 p-2">
-            <h1>
-              {house.last_sale_price
-                ? ((Number(house.last_sale_price) * 1.8) / 100).toFixed(0)
-                : house.price
-                ? ((Number(house.price) * 1.8) / 100).toFixed(0)
-                : house.pricePerShare}
-              STX Per Share
-            </h1>
-            <div className="flex gap-3">
-              {house.num_bedrooms != null && house.num_bedrooms !== "" && (
-                <p>
-                  {house.num_bedrooms} <FontAwesomeIcon icon={faBed} />
-                </p>
+    <>
+      <div className="grid grid-cols-3 gap-10 mt-20">
+        {pageData.map((house, index) => (
+          <div
+            key={index}
+            className="flex flex-col w-[380px] bg-white shadow-xl rounded"
+          >
+            {/* image container */}
+            <div className="w-full relative">
+              {selectedHouseTour[index] ? (
+                <iframe
+                  src={house.virtual_tour[0]} // Assuming virtual_tour is an object with a url property
+                  width="100%"
+                  height="250px"
+                  frameborder="0"
+                  allowfullscreen
+                  title="Virtual Tour"
+                />
+              ) : (
+                <img
+                  src={house.image_url}
+                  className="w-full h-[250px] object-cover"
+                />
               )}
-              {house.num_bathrooms != null && house.num_bathrooms !== "" && (
-                <p>
-                  {house.num_bathrooms} <FontAwesomeIcon icon={faBathtub} />
-                </p>
-              )}
-              {house.num_floors != null && house.num_floors !== "" && (
-                <p>
-                  {house.num_floors} <FontAwesomeIcon icon={faStairs} />
-                </p>
-              )}
+
+              <button
+                className="px-3 py-1 absolute top-3 left-3 text-white text-sm bg-green-600 rounded-2xl"
+                onClick={() => toggleVirtualTour(index)}
+              >
+                {selectedHouseTour[index] ? "View Image" : "Virtual Tour"}
+              </button>
             </div>
-            <p>{house.title}</p>
-            <p>{house.displayable_address}</p>
-            <p>
+            {/* info */}
+            <div className="flex flex-col gap-1 p-3">
+              <p className="font-playFont text-slate-500">{house.title}</p>
+
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faLayerGroup} />
+                <h1 className="text-2xl">
+                  {house.last_sale_price
+                    ? ((Number(house.last_sale_price) * 1.8) / 100).toFixed(0)
+                    : house.price
+                    ? ((Number(house.price) * 1.8) / 100).toFixed(0)
+                    : house.pricePerShare}
+                </h1>
+                <p>STX Per Share</p>
+              </div>
+              <div className="flex gap-3">
+                {house.num_bedrooms != null && house.num_bedrooms !== "" && (
+                  <p>
+                    {house.num_bedrooms} <FontAwesomeIcon icon={faBed} />
+                  </p>
+                )}
+                {house.num_bathrooms != null && house.num_bathrooms !== "" && (
+                  <p>
+                    {house.num_bathrooms} <FontAwesomeIcon icon={faBathtub} />
+                  </p>
+                )}
+                {house.num_floors != null && house.num_floors !== "" && (
+                  <p>
+                    {house.num_floors} <FontAwesomeIcon icon={faStairs} />
+                  </p>
+                )}
+              </div>
+              <p className="text-slate-500">{house.displayable_address}</p>
+              {/* <p>
               Posted
               {(() => {
-                const daysAgo = getDaysAgo(
+                const daysAgo = getDaysAgo(s
                   house.last_published_date.slice(0, 10)
                 );
                 return daysAgo > 0 ? ` ${daysAgo} days ago` : " Today"; // Return the appropriate message
               })()}
-            </p>
+            </p> */}
 
-            <div className="text-slate-200 p-2">
-              <input
-                type="number"
-                value={sharesInput[index].shares}
-                onChange={(e) => handleSharesChange(index, e.target.value)}
-                className="border-2 border-gray-300"
-                style={{ width: "100px" }} // Adjust styling as needed
-              />
-              <button
-                onClick={() => handleBuy(index)}
-                className="bg-blue-500 text-white mt-2"
-              >
-                Buy
-              </button>
+              <div className=" flex justify-between ">
+                <div className="flex items-center gap-2">
+                  {" "}
+                  <input
+                    type="number"
+                    value={sharesInput[index].shares}
+                    onChange={(e) => handleSharesChange(index, e.target.value)}
+                    className="border-2 border-black px-2 "
+                    style={{ width: "50px" }} // Adjust styling as needed
+                  />
+                  <p>Shares</p>
+                </div>
+
+                <button
+                  onClick={() => handleBuy(index)}
+                  className="bg-blue-500 px-6 rounded-lg py-2 text-white "
+                >
+                  Buy
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      {isLoading && <MarketGridSkeleton />}
+    </>
   );
 };
 
